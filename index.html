@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <title>Kalkulator kosztu inwestycji</title>
+  <style>
+    /* Ogólne style strony */
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #ffffff;
+    }
+    section {
+      padding: 40px 0;
+    }
+    .container {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 0 15px;
+    }
+    /* Stylizacja inspirowana podanymi elementami */
+    .t68 {
+      background-color: #fff;
+      padding: 40px 0;
+    }
+    .t279 {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: flex-start;
+      justify-content: center;
+    }
+    .t69 {
+      flex: 1;
+      max-width: 1280px;
+    }
+    .t73 {
+      font-size: 2rem;
+      margin-bottom: 20px;
+      color: #333;
+      text-align: center;
+    }
+    .dh-btn-primary {
+      background-color: #8e42ff;
+      color: #fff;
+      padding: 10px 20px;
+      text-decoration: none;
+      border-radius: 4px;
+      transition: background-color 0.3s ease;
+      display: inline-block;
+      margin-top: 15px;
+      border: none;
+      cursor: pointer;
+    }
+    .dh-btn-primary:hover {
+      background-color: #363636;
+    }
+    /* Style kalkulatora */
+    .calculator-form {
+      background-color: #f0f0f0;
+      padding: 20px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+    }
+    .calculator-form label {
+      display: block;
+      margin-bottom: 10px;
+      font-size: 1.1rem;
+      color: #333;
+    }
+    .calculator-form input {
+      width: 100%;
+      padding: 8px;
+      margin-top: 5px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      font-size: 1rem;
+    }
+    .calculator-form button {
+      margin-top: 15px;
+      font-size: 1rem;
+    }
+    .result-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+    .result-table th,
+    .result-table td {
+      border: 1px solid #ccc;
+      padding: 10px;
+      text-align: center;
+    }
+    .result-table th {
+      background-color: #363636;
+      color: #fff;
+    }
+  </style>
+</head>
+<body>
+  <section class="t68">
+    <div class="container t279">
+      <div class="t69">
+        <div class="calculator-form">
+          <form id="calculatorForm">
+            <label>
+              Koszt zakupu/inwestycji (zł):
+              <input type="number" step="0.01" id="purchaseCost" value="10000">
+            </label>
+            <label>
+              Koszty eksploatacji i serwisu (zł) – całkowity koszt w okresie użytkowania:
+              <input type="number" step="0.01" id="operatingCost" value="5000">
+            </label>
+            <label>
+              Wartość końcowa (rezydualna) (zł):
+              <input type="number" step="0.01" id="residualValue" value="2000">
+            </label>
+            <label>
+              Okres użytkowania (miesiące):
+              <input type="number" step="1" id="period" value="36">
+            </label>
+            <button type="button" class="dh-btn-primary" onclick="calculateInvestmentCost()">Oblicz koszt inwestycji</button>
+          </form>
+        </div>
+        <div id="results"></div>
+      </div>
+    </div>
+  </section>
+
+  <script>
+    function calculateInvestmentCost() {
+      const purchaseCost = parseFloat(document.getElementById("purchaseCost").value);
+      const operatingCost = parseFloat(document.getElementById("operatingCost").value);
+      const residualValue = parseFloat(document.getElementById("residualValue").value);
+      const period = parseFloat(document.getElementById("period").value);
+      
+      if (period <= 0) {
+        document.getElementById("results").innerHTML = "<p style='color: red;'>Okres użytkowania musi być większy od 0.</p>";
+        return;
+      }
+      
+      // Obliczenie średniego miesięcznego kosztu inwestycji wg wzoru:
+      // K_mies = (K_zakupu + ∑K_eksploatacji - V_rezydualna) / T
+      const monthlyCost = (purchaseCost + operatingCost - residualValue) / period;
+      
+      // Generowanie tabeli wyników
+      const resultTable = `
+      <table class="result-table">
+        <tr>
+          <th>Element kosztowy</th>
+          <th>Kwota (zł)</th>
+        </tr>
+        <tr>
+          <td>Koszt zakupu</td>
+          <td>${purchaseCost.toFixed(2)}</td>
+        </tr>
+        <tr>
+          <td>Koszty eksploatacji i serwisu</td>
+          <td>${operatingCost.toFixed(2)}</td>
+        </tr>
+        <tr>
+          <td>Wartość rezydualna</td>
+          <td>${residualValue.toFixed(2)}</td>
+        </tr>
+        <tr>
+          <td>Okres użytkowania (miesiące)</td>
+          <td>${period}</td>
+        </tr>
+        <tr>
+          <td><strong>Średni miesięczny koszt inwestycji</strong></td>
+          <td><strong>${monthlyCost.toFixed(2)}</strong></td>
+        </tr>
+      </table>
+      `;
+      
+      document.getElementById("results").innerHTML = resultTable;
+    }
+  </script>
+</body>
+</html>
