@@ -2,185 +2,892 @@
 <html lang="pl">
 <head>
   <meta charset="UTF-8">
-  <title>Kalkulator kosztu inwestycji</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Czy ta inwestycja ma sens? | NaprawimyFirmę</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
   <style>
-    /* Ogólne style strony */
-    body {
-      font-family: Arial, sans-serif;
-      margin: 0;
-      padding: 0;
-      background-color: #ffffff;
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{
+      --bg:#fafaf8;--surface:#fff;--surface-alt:#f4f3f0;--border:#e2e0db;
+      --text:#1a1a18;--text-mid:#5c5b57;--text-light:#8a8984;
+      --accent:#8e42ff;--accent-soft:#f0e6ff;--accent-dark:#6b2cc7;
+      --green:#1a7a3a;--green-bg:#e8f5ec;
+      --orange:#c55a11;--orange-bg:#fef3e8;
+      --red:#b91c1c;--red-bg:#fde8e8;
+      --radius:12px;
     }
-    section {
-      padding: 40px 0;
+    body{
+      font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);
+      line-height:1.6;-webkit-font-smoothing:antialiased;
+      min-height:100vh;
     }
-    .container {
-      max-width: 1280px;
-      margin: 0 auto;
-      padding: 0 15px;
+    .app{width:100%;max-width:580px;margin:0 auto;padding:24px 20px 40px}
+
+    /* Progress */
+    .progress-wrap{margin-bottom:36px;position:sticky;top:0;z-index:10;background:var(--bg);padding:16px 0 0}
+    .progress-meta{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+    .progress-label{font-size:.72rem;font-family:'Space Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:var(--text-light)}
+    .progress-step{font-size:.72rem;font-family:'Space Mono',monospace;color:var(--accent);font-weight:700}
+    .progress-bar{height:6px;background:var(--border);border-radius:100px;overflow:hidden}
+    .progress-fill{height:100%;background:var(--accent);border-radius:100px;transition:width .45s cubic-bezier(.4,0,.2,1)}
+
+    /* Screens */
+    .screen{display:none}
+    .screen.active{display:block}
+    .fade-in{animation:fadeUp .4s ease both}
+    @keyframes fadeUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
+
+    /* Intro */
+    .intro-wrap{display:flex;align-items:center;justify-content:center;min-height:70vh}
+    .intro-badge{
+      display:inline-block;font-family:'Space Mono',monospace;font-size:.68rem;
+      letter-spacing:.12em;text-transform:uppercase;color:var(--accent);
+      background:var(--accent-soft);padding:5px 14px;border-radius:100px;margin-bottom:18px;
     }
-    /* Stylizacja inspirowana podanymi elementami */
-    .t68 {
-      background-color: #fff;
-      padding: 40px 0;
+    .intro h1{font-size:clamp(1.5rem,4.5vw,2rem);font-weight:700;line-height:1.22;margin-bottom:12px}
+    .intro p{color:var(--text-mid);font-size:.92rem;margin-bottom:20px;max-width:440px}
+    .intro .small{font-size:.8rem;color:var(--text-light);margin-bottom:0}
+
+    /* Question card */
+    .q-card{
+      background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius);
+      padding:32px 28px 28px;box-shadow:0 4px 20px rgba(0,0,0,.06);
     }
-    .t279 {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: flex-start;
-      justify-content: center;
+    .q-section{
+      font-family:'Space Mono',monospace;font-size:.62rem;letter-spacing:.12em;
+      text-transform:uppercase;color:var(--accent);margin-bottom:10px;font-weight:700;
     }
-    .t69 {
-      flex: 1;
-      max-width: 1280px;
+    .q-title{font-size:1.15rem;font-weight:700;margin-bottom:8px;line-height:1.35}
+    .q-hint{font-size:.85rem;color:var(--text-mid);margin-bottom:8px;line-height:1.55}
+    .q-example{
+      font-size:.78rem;color:var(--text-light);margin-bottom:20px;
+      background:var(--surface-alt);padding:8px 12px;border-radius:8px;line-height:1.5;
     }
-    .t73 {
-      font-size: 2rem;
-      margin-bottom: 20px;
-      color: #333;
-      text-align: center;
+
+    /* Input */
+    .q-input-wrap{position:relative;margin-bottom:4px}
+    .q-input{
+      width:100%;padding:14px 55px 14px 18px;border:2px solid var(--border);border-radius:10px;
+      font-family:'DM Sans',sans-serif;font-size:1.1rem;font-weight:600;color:var(--text);
+      background:var(--bg);outline:none;transition:border-color .2s,box-shadow .2s;
     }
-    .dh-btn-primary {
-      background-color: #8e42ff;
-      color: #fff;
-      padding: 10px 20px;
-      text-decoration: none;
-      border-radius: 4px;
-      transition: background-color 0.3s ease;
-      display: inline-block;
-      margin-top: 15px;
-      border: none;
-      cursor: pointer;
+    .q-input:focus{border-color:var(--accent);box-shadow:0 0 0 4px rgba(142,66,255,.1)}
+    .q-input::placeholder{color:var(--text-light);font-weight:400;font-size:.95rem}
+    .q-unit{
+      position:absolute;right:16px;top:50%;transform:translateY(-50%);
+      font-size:.82rem;color:var(--text-light);font-weight:500;pointer-events:none;
     }
-    .dh-btn-primary:hover {
-      background-color: #363636;
+    .q-error{
+      font-size:.76rem;color:var(--red);min-height:22px;padding:4px 0 10px;
+      transition:opacity .2s;
     }
-    /* Style kalkulatora */
-    .calculator-form {
-      background-color: #f0f0f0;
-      padding: 20px;
-      border-radius: 8px;
-      margin-bottom: 20px;
+
+    /* Option cards */
+    .opt-group{display:flex;flex-direction:column;gap:10px;margin-bottom:18px}
+    .opt-card{
+      padding:14px 18px;border:2px solid var(--border);border-radius:10px;
+      cursor:pointer;transition:all .2s;font-size:.9rem;display:flex;align-items:center;gap:12px;
     }
-    .calculator-form label {
-      display: block;
-      margin-bottom: 10px;
-      font-size: 1.1rem;
-      color: #333;
+    .opt-card:hover{border-color:var(--accent);background:var(--accent-soft)}
+    .opt-card.selected{border-color:var(--accent);background:var(--accent-soft);font-weight:600}
+    .opt-dot{
+      width:18px;height:18px;border-radius:50%;border:2px solid var(--border);
+      flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .2s;
     }
-    .calculator-form input {
-      width: 100%;
-      padding: 8px;
-      margin-top: 5px;
-      border: 1px solid #ccc;
-      border-radius: 4px;
-      font-size: 1rem;
+    .opt-card.selected .opt-dot{border-color:var(--accent);background:var(--accent)}
+    .opt-card.selected .opt-dot::after{content:'';width:8px;height:8px;border-radius:50%;background:#fff}
+
+    /* Buttons */
+    .q-actions{display:flex;gap:10px;flex-wrap:wrap}
+    .btn{
+      padding:13px 24px;border-radius:10px;font-family:'DM Sans',sans-serif;
+      font-size:.9rem;font-weight:600;cursor:pointer;transition:all .18s;border:none;
     }
-    .calculator-form button {
-      margin-top: 15px;
-      font-size: 1rem;
+    .btn-primary{background:var(--text);color:#fff;flex:1;min-width:140px}
+    .btn-primary:hover{background:#333}
+    .btn-primary:active{transform:scale(.98)}
+    .btn-skip{background:transparent;color:var(--text-light);border:1.5px solid var(--border)}
+    .btn-skip:hover{background:var(--surface-alt);color:var(--text-mid)}
+    .btn-back{background:transparent;color:var(--text-light);border:none;padding:13px 12px}
+    .btn-back:hover{color:var(--text)}
+    .btn-start{
+      background:var(--accent);color:#fff;padding:16px 32px;font-size:1rem;
+      border:none;border-radius:10px;font-family:'DM Sans',sans-serif;font-weight:600;
+      cursor:pointer;transition:all .2s;
     }
-    .result-table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 20px;
+    .btn-start:hover{background:var(--accent-dark)}
+
+    /* ═══ RESULTS ═══ */
+    .verdict-box{
+      border-radius:var(--radius);padding:32px 28px 28px;text-align:center;
+      margin-bottom:6px;border:2px solid transparent;
     }
-    .result-table th,
-    .result-table td {
-      border: 1px solid #ccc;
-      padding: 10px;
-      text-align: center;
+    .verdict-label{font-family:'Space Mono',monospace;font-size:.62rem;letter-spacing:.14em;text-transform:uppercase;opacity:.7;margin-bottom:6px}
+    .verdict-text{font-size:clamp(1.6rem,5vw,2.2rem);font-weight:700;margin-bottom:10px}
+    .verdict-desc{font-size:.86rem;max-width:440px;margin:0 auto;line-height:1.55}
+    .verdict-buy{background:var(--green-bg);border-color:var(--green);color:var(--green)}
+    .verdict-maybe{background:var(--orange-bg);border-color:var(--orange);color:var(--orange)}
+    .verdict-no{background:var(--red-bg);border-color:var(--red);color:var(--red)}
+
+    /* Why verdict */
+    .why-box{
+      background:var(--surface);border:1.5px solid var(--border);border-radius:0 0 var(--radius) var(--radius);
+      border-top:none;padding:16px 24px 18px;margin-bottom:20px;font-size:.82rem;color:var(--text-mid);
     }
-    .result-table th {
-      background-color: #363636;
-      color: #fff;
+    .why-box .why-title{font-size:.68rem;font-family:'Space Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:var(--text-light);margin-bottom:8px}
+    .why-row{display:flex;justify-content:space-between;padding:5px 0;gap:12px}
+    .why-row .wr-label{color:var(--text-mid)}
+    .why-row .wr-value{font-family:'Space Mono',monospace;font-weight:600;white-space:nowrap}
+    .wr-good{color:var(--green)}.wr-mid{color:var(--orange)}.wr-bad{color:var(--red)}
+
+    /* Dual meters: confidence + risk */
+    .meters-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px}
+    @media(max-width:480px){.meters-grid{grid-template-columns:1fr}}
+    .meter-card{
+      background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius);padding:18px 20px;
     }
+    .meter-label{display:flex;justify-content:space-between;font-size:.74rem;margin-bottom:8px}
+    .meter-bar{height:8px;background:var(--surface-alt);border-radius:100px;overflow:hidden}
+    .meter-fill{height:100%;border-radius:100px;transition:width .6s ease}
+    .meter-hint{font-size:.68rem;color:var(--text-light);margin-top:6px}
+
+    /* KPI */
+    .kpi-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px}
+    @media(max-width:480px){.kpi-grid{grid-template-columns:1fr}}
+    .kpi-card{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius);padding:18px 20px}
+    .kpi-label{font-size:.72rem;color:var(--text-light);margin-bottom:4px}
+    .kpi-value{font-family:'Space Mono',monospace;font-size:1.15rem;font-weight:700}
+    .kpi-sub{font-size:.68rem;color:var(--text-light);margin-top:2px}
+    .kpi-pos{color:var(--green)}.kpi-neg{color:var(--red)}.kpi-neut{color:var(--text)}
+
+    /* Breakeven + buffer */
+    .be-box{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius);padding:22px 24px;margin-bottom:20px}
+    .be-box h3{font-size:.88rem;margin-bottom:14px}
+    .be-row{display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--border);font-size:.84rem}
+    .be-row:last-child{border-bottom:none}
+    .be-row .lbl{color:var(--text-mid)}
+    .be-row .val{font-family:'Space Mono',monospace;font-weight:700;font-size:.86rem}
+
+    .buffer-box{
+      margin-top:16px;padding:14px 16px;border-radius:8px;font-size:.82rem;
+      display:flex;align-items:center;gap:12px;
+    }
+    .buffer-icon{font-size:1.4rem;flex-shrink:0}
+    .buffer-text strong{font-family:'Space Mono',monospace}
+
+    .util-wrap{margin-top:16px;padding-top:16px;border-top:1px solid var(--border)}
+    .util-meta{display:flex;justify-content:space-between;font-size:.74rem;margin-bottom:6px}
+    .util-bar{height:10px;background:var(--surface-alt);border-radius:100px;overflow:hidden;position:relative}
+    .util-fill{height:100%;border-radius:100px;transition:width .6s}
+    .util-mark{position:absolute;top:-2px;bottom:-2px;width:2.5px;border-radius:2px}
+    .util-legend{display:flex;gap:16px;margin-top:8px;font-size:.68rem;color:var(--text-light)}
+    .util-legend-dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:4px;vertical-align:middle}
+
+    /* Scenarios */
+    .sc-box{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius);padding:22px 24px;margin-bottom:20px}
+    .sc-box h3{font-size:.88rem;margin-bottom:16px}
+    .sc-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+    @media(max-width:480px){.sc-grid{grid-template-columns:1fr}}
+    .sc-card{border:1.5px solid var(--border);border-radius:8px;padding:16px 14px;text-align:center}
+    .sc-card .sc-t{font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px}
+    .sc-card .sc-r{font-size:.74rem;color:var(--text-mid);margin-bottom:3px}
+    .sc-card .sc-r strong{color:var(--text);font-family:'Space Mono',monospace;font-size:.78rem}
+    .sc-con{border-color:var(--red)}.sc-con .sc-t{color:var(--red)}
+    .sc-real{border-color:var(--accent)}.sc-real .sc-t{color:var(--accent)}
+    .sc-opt{border-color:var(--green)}.sc-opt .sc-t{color:var(--green)}
+
+    /* CTA */
+    .cta-box{
+      background:linear-gradient(135deg,var(--accent-soft),#f8f4ff);
+      border:1.5px solid var(--accent);border-radius:var(--radius);
+      padding:28px 28px;text-align:center;margin-bottom:20px;
+    }
+    .cta-box h3{font-size:1rem;margin-bottom:8px;color:var(--text)}
+    .cta-box p{font-size:.84rem;color:var(--text-mid);margin-bottom:16px}
+    .cta-link{
+      display:inline-block;background:var(--accent);color:#fff;
+      padding:12px 28px;border-radius:10px;text-decoration:none;
+      font-weight:600;font-size:.9rem;transition:background .2s;
+    }
+    .cta-link:hover{background:var(--accent-dark)}
+
+    /* Penalty */
+    .penalty-note{
+      background:var(--orange-bg);border:1px solid var(--orange);border-radius:var(--radius);
+      padding:14px 18px;font-size:.78rem;color:var(--orange);margin-bottom:20px;line-height:1.5;
+    }
+
+    .restart-wrap{text-align:center;margin-top:28px}
+    .btn-restart{
+      background:transparent;border:1.5px solid var(--border);color:var(--text-mid);
+      padding:12px 28px;border-radius:10px;font-family:'DM Sans',sans-serif;
+      font-size:.88rem;font-weight:600;cursor:pointer;transition:all .2s;
+    }
+    .btn-restart:hover{background:var(--surface-alt);color:var(--text)}
   </style>
 </head>
 <body>
-  <section class="t68">
-    <div class="container t279">
-      <div class="t69">
-        <div class="calculator-form">
-          <form id="calculatorForm">
-            <label>
-              Jednorazowy koszt inwestycji (zł):
-              <input type="number" step="0.01" id="purchaseCost">
-            </label>
-            <label>
-              Całkowite koszty eksploatacji i serwisu (zł) – koszt w okresie użytkowania:
-              <input type="number" step="0.01" id="operatingCost">
-            </label>
-            <label>
-              Wartość końcowa (rezydualna) (zł):
-              <input type="number" step="0.01" id="residualValue">
-            </label>
-            <label>
-              Okres użytkowania (miesiące):
-              <input type="number" step="1" id="period">
-            </label>
-            <button type="button" class="dh-btn-primary" onclick="calculateInvestmentCost()">Oblicz koszt inwestycji</button>
-          </form>
-        </div>
-        <div id="results"></div>
+
+<div class="app">
+  <div class="progress-wrap" id="progressWrap" style="display:none">
+    <div class="progress-meta">
+      <span class="progress-label">Analiza inwestycji</span>
+      <span class="progress-step" id="progressStep"></span>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+  </div>
+
+  <!-- INTRO -->
+  <div class="screen active" id="screenIntro">
+    <div class="intro-wrap">
+      <div class="intro fade-in">
+        <div class="intro-badge">Quiz decyzyjny</div>
+        <h1>Czy ta inwestycja się opłaca?</h1>
+        <p>Chcesz kupić maszynę, sprzęt, samochód, narzędzie? Odpowiedz na kilka prostych pytań. Na końcu powiem Ci wprost: kupuj albo nie kupuj.</p>
+        <p class="small">Nie wiesz co wpisać? Kliknij „Nie wiem". Ale im więcej pominiesz, tym mniej dokładny wynik.</p>
+        <br>
+        <button class="btn-start" onclick="startQuiz()">Zaczynamy →</button>
       </div>
     </div>
-  </section>
+  </div>
 
-  <script>
-    function calculateInvestmentCost() {
-      const purchaseCost = parseFloat(document.getElementById("purchaseCost").value);
-      const operatingCost = parseFloat(document.getElementById("operatingCost").value);
-      const residualValue = parseFloat(document.getElementById("residualValue").value);
-      const period = parseFloat(document.getElementById("period").value);
-      
-      // Sprawdzenie, czy wszystkie pola są uzupełnione liczbami
-      if (isNaN(purchaseCost) || isNaN(operatingCost) || isNaN(residualValue) || isNaN(period)) {
-        document.getElementById("results").innerHTML = "<p style='color: red;'>Proszę wypełnić wszystkie pola liczbami.</p>";
-        return;
-      }
-      
-      if (period <= 0) {
-        document.getElementById("results").innerHTML = "<p style='color: red;'>Okres użytkowania musi być większy od 0.</p>";
-        return;
-      }
-      
-      // Obliczenie średniego miesięcznego kosztu inwestycji wg wzoru:
-      // K_mies = (K_zakupu + ∑K_eksploatacji - V_rezydualna) / T
-      const monthlyCost = (purchaseCost + operatingCost - residualValue) / period;
-      
-      // Generowanie tabeli wyników
-      const resultTable = `
-      <table class="result-table">
-        <tr>
-          <th>Element kosztowy</th>
-          <th>Kwota (zł)</th>
-        </tr>
-        <tr>
-          <td>Koszt zakupu</td>
-          <td>${purchaseCost.toFixed(2)}</td>
-        </tr>
-        <tr>
-          <td>Koszty eksploatacji i serwisu</td>
-          <td>${operatingCost.toFixed(2)}</td>
-        </tr>
-        <tr>
-          <td>Wartość rezydualna</td>
-          <td>${residualValue.toFixed(2)}</td>
-        </tr>
-        <tr>
-          <td>Okres użytkowania (miesiące)</td>
-          <td>${period}</td>
-        </tr>
-        <tr>
-          <td><strong>Średni miesięczny koszt inwestycji</strong></td>
-          <td><strong>${monthlyCost.toFixed(2)}</strong></td>
-        </tr>
-      </table>
-      `;
-      
-      document.getElementById("results").innerHTML = resultTable;
+  <!-- QUESTION -->
+  <div class="screen" id="screenQuestion">
+    <div class="q-card">
+      <div class="q-section" id="qSection"></div>
+      <div class="q-title" id="qTitle"></div>
+      <div class="q-hint" id="qHint"></div>
+      <div class="q-example" id="qExample"></div>
+      <div id="qInput"></div>
+      <div class="q-error" id="qError">&nbsp;</div>
+      <div class="q-actions">
+        <button class="btn btn-back" id="btnBack" onclick="goBack()">← Wróć</button>
+        <button class="btn btn-skip" id="btnSkip" onclick="skipQuestion()">Nie wiem</button>
+        <button class="btn btn-primary" onclick="nextQuestion()">Dalej →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- RESULTS -->
+  <div class="screen" id="screenResults"></div>
+</div>
+
+<script>
+/* ═══ QUESTIONS ═══ */
+const baseQuestions = [
+  {
+    id:'purchaseCost', section:'Koszty', type:'number',
+    title:'Ile kosztuje ten sprzęt?',
+    hint:'Cena ze sklepu, z ogłoszenia, z oferty dealera. Kwota netto (bez VAT).',
+    example:'Koparka: 120 000 zł · Dostawczak: 85 000 zł · Laser CNC: 45 000 zł',
+    unit:'zł', placeholder:'np. 120000', fallback:0, required:true,
+    validate: v => v > 0 ? null : 'Wpisz cenę większą od 0.'
+  },
+  {
+    id:'implementationCost', section:'Koszty', type:'number',
+    title:'Czy musisz jeszcze za coś zapłacić zanim zaczniesz używać?',
+    hint:'Transport, montaż, podłączenie, szkolenie. Jeśli kupujesz i od razu używasz — wpisz 0.',
+    example:'Transport: 2 000 zł + montaż: 3 000 zł = razem 5 000 zł',
+    unit:'zł', placeholder:'np. 5000', fallback:0,
+    validate: v => v >= 0 ? null : 'Kwota nie może być ujemna.'
+  },
+  {
+    id:'monthlyOperatingCost', section:'Koszty', type:'number',
+    title:'Ile co miesiąc kosztuje Cię utrzymanie tego sprzętu?',
+    hint:'Prąd, paliwo, olej, materiały — wszystko, co płacisz regularnie, żeby sprzęt działał.',
+    example:'Paliwo 800 zł + materiały 400 zł = 1 200 zł miesięcznie',
+    unit:'zł/mies.', placeholder:'np. 1200', fallback:0,
+    validate: v => v >= 0 ? null : 'Kwota nie może być ujemna.'
+  },
+  {
+    id:'annualServiceCost', section:'Koszty', type:'number',
+    title:'Ile rocznie wydajesz na serwis i naprawy?',
+    hint:'Przeglądy, wymiana części, ubezpieczenie — zsumuj wszystko za cały rok.',
+    example:'Przegląd 1 200 zł + ubezpieczenie 2 400 zł = 3 600 zł rocznie',
+    unit:'zł/rok', placeholder:'np. 3600', fallback:0,
+    validate: v => v >= 0 ? null : 'Kwota nie może być ujemna.'
+  },
+  {
+    id:'residualValue', section:'Koszty', type:'number',
+    title:'Za ile to sprzedasz, jak już nie będzie Ci potrzebne?',
+    hint:'Ile ktoś Ci za to da za kilka lat? Zazwyczaj 10–20% ceny zakupu.',
+    example:'Kupujesz za 100 000 zł → za 5 lat sprzedasz za ok. 15 000 zł',
+    unit:'zł', placeholder:'np. 15000', fallback:0,
+    validate: v => {
+      if (v < 0) return 'Kwota nie może być ujemna.';
+      const pc = answers.purchaseCost || 0;
+      if (pc > 0 && v > pc) return 'Wartość odsprzedaży nie może być większa niż cena zakupu.';
+      return null;
     }
-  </script>
+  },
+  {
+    id:'period', section:'Koszty', type:'number',
+    title:'Ile miesięcy będziesz tego używać?',
+    hint:'Ile czasu, zanim się zużyje albo wymienisz na nowsze?',
+    example:'3 lata = 36 · 5 lat = 60 · 7 lat = 84 miesięcy',
+    unit:'mies.', placeholder:'np. 60', fallback:60, required:true,
+    validate: v => v > 0 ? null : 'Wpisz liczbę większą od 0.'
+  },
+  {
+    id:'benefitType', section:'Co Ci to da?', type:'select',
+    title:'Dzięki temu sprzętowi będziesz...',
+    hint:'Wybierz to, co lepiej pasuje do Twojej sytuacji.',
+    example:'',
+    options:[
+      {value:'earn',  label:'...zarabiać więcej (nowe usługi, więcej zleceń, szybsza praca)'},
+      {value:'save',  label:'...oszczędzać (mniej ludzi, tańsze materiały, mniej czasu)'},
+      {value:'both',  label:'...jedno i drugie'}
+    ],
+    fallback:'earn', canSkip:false
+  },
+  // dynamic earn/save questions inserted here
+  {
+    id:'revenuePerHour', section:'Próg rentowności', type:'number',
+    title:'Ile zarabiasz, gdy ten sprzęt pracuje 1 godzinę?',
+    hint:'To pytanie służy do obliczenia, ile godzin sprzęt musi pracować, żeby się opłacał. Jeśli nie sprzedajesz godzin pracy — pomiń.',
+    example:'Koparka na budowie: 250 zł/h · CNC: 180 zł/h · Drukarka: 60 zł/h',
+    unit:'zł/h', placeholder:'np. 150', fallback:0,
+    validate: v => v >= 0 ? null : 'Kwota nie może być ujemna.'
+  },
+  {
+    id:'availableHoursPerDay', section:'Próg rentowności', type:'number',
+    title:'Ile godzin dziennie ten sprzęt może pracować?',
+    hint:'Gdybyś miał zlecenia na cały dzień — ile godzin mógłby działać? Liczymy 22 dni robocze.',
+    example:'Cały etat: 8h · Pół dnia: 4h · Na dwie zmiany: 14h',
+    unit:'h/dzień', placeholder:'np. 8', fallback:8,
+    validate: v => v > 0 && v <= 24 ? null : 'Wpisz od 1 do 24 godzin.'
+  },
+  {
+    id:'utilization', section:'Ryzyko', type:'number',
+    title:'Przez ile procent czasu sprzęt faktycznie będzie zajęty?',
+    hint:'Nigdy nie będzie 100%. Są przestoje, brak zleceń, pogoda, awarie. Bądź szczery — lepiej zaniżyć.',
+    example:'Dużo roboty: 80% · Normalnie: 60% · Sezonowo: 40%',
+    unit:'%', placeholder:'np. 70', fallback:70,
+    validate: v => v > 0 && v <= 100 ? null : 'Wpisz wartość od 1% do 100%.'
+  },
+  {
+    id:'demandLevel', section:'Ryzyko', type:'select',
+    title:'Masz już klientów, którzy zapłacą za pracę tego sprzętu?',
+    hint:'To najważniejsze pytanie. Sprzęt w garażu nie zarabia — zarabia tylko wtedy, gdy ktoś za to płaci.',
+    example:'',
+    options:[
+      {value:'high',   label:'Tak — mam stałe zlecenia albo podpisane umowy'},
+      {value:'medium', label:'Częściowo — mam kilku klientów, ale nie na cały czas'},
+      {value:'low',    label:'Nie mam — kupuję i liczę, że klienci się znajdą'}
+    ],
+    fallback:'medium'
+  }
+];
+
+const earnQ = {
+  id:'additionalRevenue', section:'Co Ci to da?', type:'number',
+  title:'Ile więcej zarobisz miesięcznie dzięki temu sprzętowi?',
+  hint:'Wpisz kwotę, która realnie zostanie w firmie — nie optymistyczny obrót, a faktyczny dodatkowy wpływ po kosztach wykonania usługi.',
+  example:'10 zleceń × 800 zł marży = 8 000 zł więcej miesięcznie',
+  unit:'zł/mies.', placeholder:'np. 8000', fallback:0,
+  // required is set dynamically in buildFlow()
+  validate: v => v >= 0 ? null : 'Kwota nie może być ujemna.'
+};
+const saveQ = {
+  id:'monthlySavings', section:'Co Ci to da?', type:'number',
+  title:'Ile zaoszczędzisz miesięcznie dzięki temu sprzętowi?',
+  hint:'Policz konkretnie: ile mniej zapłacisz za ludzi, materiały, podwykonawców, czas. Realna kwota, nie życzeniowa.',
+  example:'Oszczędzasz 1 pracownika (4 500 zł) + materiały (500 zł) = 5 000 zł/mies.',
+  unit:'zł/mies.', placeholder:'np. 5000', fallback:0,
+  // required is set dynamically in buildFlow()
+  validate: v => v >= 0 ? null : 'Kwota nie może być ujemna.'
+};
+
+/* ═══ STATE ═══ */
+let flow = [];
+let current = 0;
+let answers = {};
+let skipped = new Set();
+
+function buildFlow() {
+  const bt = answers.benefitType || 'earn';
+  flow = [];
+  for (const q of baseQuestions) {
+    flow.push(q);
+    if (q.id === 'benefitType') {
+      if (bt === 'earn') {
+        flow.push({...earnQ, required: true});
+      } else if (bt === 'save') {
+        flow.push({...saveQ, required: true});
+      } else {
+        // both: oba opcjonalne, ale walidujemy przed wyjściem z sekcji
+        flow.push({...earnQ});
+        flow.push({...saveQ});
+      }
+    }
+  }
+}
+
+function startQuiz() {
+  document.getElementById('screenIntro').classList.remove('active');
+  document.getElementById('screenQuestion').classList.add('active');
+  document.getElementById('progressWrap').style.display = 'block';
+  current = 0; answers = {}; skipped = new Set();
+  buildFlow();
+  renderQuestion();
+}
+
+function renderQuestion() {
+  const q = flow[current];
+  document.getElementById('qSection').textContent = q.section;
+  document.getElementById('qTitle').textContent = q.title;
+  document.getElementById('qHint').textContent = q.hint;
+  const exEl = document.getElementById('qExample');
+  if (q.example) { exEl.textContent = q.example; exEl.style.display = 'block'; }
+  else exEl.style.display = 'none';
+  document.getElementById('qError').innerHTML = '&nbsp;';
+
+  const container = document.getElementById('qInput');
+  const canSkip = q.canSkip !== false && !q.required;
+  document.getElementById('btnSkip').style.display = canSkip ? '' : 'none';
+
+  if (q.type === 'number') {
+    const saved = answers[q.id];
+    const wasSkipped = skipped.has(q.id);
+    container.innerHTML = `
+      <div class="q-input-wrap">
+        <input class="q-input" type="number" step="any" id="qField"
+          placeholder="${q.placeholder}"
+          value="${saved !== undefined && !wasSkipped ? saved : ''}">
+        <span class="q-unit">${q.unit}</span>
+      </div>`;
+    setTimeout(() => document.getElementById('qField').focus(), 80);
+    document.getElementById('qField').addEventListener('keydown', e => {
+      if (e.key === 'Enter') nextQuestion();
+    });
+  } else if (q.type === 'select') {
+    const saved = answers[q.id] || '';
+    container.innerHTML = `<div class="opt-group">` +
+      q.options.map(o => `
+        <div class="opt-card ${saved === o.value ? 'selected' : ''}" onclick="selectOpt(this,'${o.value}')">
+          <div class="opt-dot"></div>
+          <span>${o.label}</span>
+        </div>`).join('') + `</div>`;
+  }
+
+  document.getElementById('progressStep').textContent = `${current + 1} / ${flow.length}`;
+  document.getElementById('progressFill').style.width = ((current + 1) / flow.length * 100) + '%';
+  document.getElementById('btnBack').style.visibility = current > 0 ? 'visible' : 'hidden';
+
+  const card = document.querySelector('.q-card');
+  card.style.animation = 'none'; card.offsetHeight;
+  card.style.animation = 'fadeUp .3s ease both';
+}
+
+function selectOpt(el, val) {
+  document.querySelectorAll('.opt-card').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+  answers[flow[current].id] = val;
+  skipped.delete(flow[current].id);
+}
+
+function showError(msg) {
+  const el = document.getElementById('qError');
+  el.textContent = msg;
+  const field = document.getElementById('qField');
+  if (field) {
+    field.style.borderColor = 'var(--red)';
+    field.style.boxShadow = '0 0 0 4px rgba(185,28,28,.1)';
+    setTimeout(() => { field.style.borderColor = ''; field.style.boxShadow = ''; }, 2000);
+  }
+}
+
+function nextQuestion() {
+  const q = flow[current];
+  if (q.type === 'number') {
+    const field = document.getElementById('qField');
+    const raw = field.value.trim();
+    const v = parseFloat(raw);
+    if (q.required && (raw === '' || isNaN(v))) { showError('To pole jest wymagane.'); return; }
+    if (raw !== '' && !isNaN(v)) {
+      // Validate
+      if (q.validate) {
+        const err = q.validate(v);
+        if (err) { showError(err); return; }
+      }
+      answers[q.id] = v; skipped.delete(q.id);
+    }
+  } else if (q.type === 'select') {
+    if (!answers[q.id] && !skipped.has(q.id)) { showError('Wybierz jedną z opcji.'); return; }
+  }
+  if (q.id === 'benefitType') {
+    buildFlow();
+    current = flow.findIndex(x => x.id === 'benefitType') + 1;
+    renderQuestion(); return;
+  }
+  // Cross-field: przy "both" co najmniej jeden efekt > 0
+  if (q.id === 'monthlySavings' && answers.benefitType === 'both') {
+    const rev = answers.additionalRevenue || 0;
+    const sav = answers.monthlySavings || 0;
+    if (rev <= 0 && sav <= 0) {
+      showError('Przynajmniej jedno pole musi być większe od 0 — tu albo w poprzednim pytaniu.');
+      return;
+    }
+  }
+  advance();
+}
+
+function skipQuestion() {
+  const q = flow[current];
+  if (q.required || q.canSkip === false) return;
+  skipped.add(q.id);
+  answers[q.id] = q.fallback;
+  if (q.id === 'benefitType') {
+    buildFlow();
+    current = flow.findIndex(x => x.id === 'benefitType') + 1;
+    renderQuestion(); return;
+  }
+  // Cross-field: przy "both" nie pozwól pominąć obu
+  if (q.id === 'monthlySavings' && answers.benefitType === 'both') {
+    const rev = answers.additionalRevenue || 0;
+    if (rev <= 0) {
+      showError('Nie możesz pominąć obu pytań. Wróć i wpisz przychód albo podaj oszczędność tutaj.');
+      skipped.delete(q.id);
+      delete answers[q.id];
+      return;
+    }
+  }
+  if (q.id === 'additionalRevenue' && answers.benefitType === 'both') {
+    // OK to skip — ale drugie pytanie musi być uzupełnione, sprawdzimy tam
+  }
+  advance();
+}
+
+function advance() {
+  if (current < flow.length - 1) { current++; renderQuestion(); }
+  else showResults();
+}
+function goBack() { if (current > 0) { current--; renderQuestion(); } }
+
+/* ═══════════════════════════════════════
+   RESULTS
+   ═══════════════════════════════════════ */
+function fmt(n) { return isFinite(n) ? n.toLocaleString('pl-PL',{maximumFractionDigits:0}) : '∞'; }
+function fmt1(n) { return isFinite(n) ? n.toLocaleString('pl-PL',{maximumFractionDigits:1}) : '∞'; }
+
+function showResults() {
+  document.getElementById('screenQuestion').classList.remove('active');
+  document.getElementById('progressWrap').style.display = 'none';
+
+  const a = answers;
+  const purchaseCost = a.purchaseCost || 0;
+  const implCost = a.implementationCost || 0;
+  const monthlyOp = a.monthlyOperatingCost || 0;
+  const annualSvc = a.annualServiceCost || 0;
+  const residual = a.residualValue || 0;
+  const period = a.period || 60;
+  const addRevenue = a.additionalRevenue || 0;
+  const savings = a.monthlySavings || 0;
+  const revPerHour = a.revenuePerHour || 0;
+  const hoursPerDay = a.availableHoursPerDay || 8;
+  const availH = hoursPerDay * 22;
+  const util = a.utilization || 70;
+  const demand = a.demandLevel || 'medium';
+
+  // ── Core calculations ──
+  const totalCost = purchaseCost + implCost + (monthlyOp * period) + (annualSvc * period / 12) - residual;
+  const monthlyCost = totalCost / period;
+  // Benefit = only from declared revenue/savings (NOT from hourly rate)
+  const monthlyBenefit = addRevenue + savings;
+  const monthlyNet = monthlyBenefit - monthlyCost;
+  const initial = purchaseCost + implCost;
+  const payback = monthlyNet > 0 ? initial / monthlyNet : Infinity;
+
+  // Breakeven hours (only for display, not for benefit calc)
+  const reqHours = revPerHour > 0 ? monthlyCost / revPerHour : null;
+  const reqUtil = (reqHours !== null && availH > 0) ? (reqHours / availH) * 100 : null;
+
+  // ── Buffer: declared util vs required util ──
+  const hasUtilData = reqUtil !== null;
+  const bufferPP = hasUtilData ? util - reqUtil : null;
+  const hasUtilMismatch = hasUtilData && util < reqUtil;
+
+  // ── Confidence (data quality only) ──
+  const skippedCount = skipped.size;
+  const confidence = Math.max(0, Math.round(100 - (skippedCount * 10)));
+
+  // ── Risk (business safety — separate from confidence) ──
+  let riskScore = 0; // 0 = safe, higher = worse
+  if (demand === 'low') riskScore += 30;
+  else if (demand === 'medium') riskScore += 10;
+  if (hasUtilData && bufferPP < 10) riskScore += 25;
+  else if (hasUtilData && bufferPP < 20) riskScore += 10;
+  if (payback > 24) riskScore += 20;
+  else if (payback > 18) riskScore += 10;
+  if (monthlyNet <= 0) riskScore += 30;
+  // Positive factors — reward strong fundamentals
+  if (payback <= 12) riskScore -= 10;
+  if (hasUtilData && bufferPP >= 25) riskScore -= 10;
+  riskScore = Math.max(0, Math.min(100, riskScore));
+  const riskPct = riskScore;
+  const riskWord = riskPct <= 25 ? 'Niskie' : riskPct <= 50 ? 'Średnie' : riskPct <= 75 ? 'Podwyższone' : 'Wysokie';
+  const riskColor = riskPct <= 25 ? 'var(--green)' : riskPct <= 50 ? 'var(--orange)' : 'var(--red)';
+
+  // ── Demand-based scenario multipliers ──
+  let scenM;
+  if (demand === 'low') scenM = [0.5, 0.8, 1.0];
+  else if (demand === 'medium') scenM = [0.7, 1.0, 1.2];
+  else scenM = [0.8, 1.0, 1.3];
+  const scenN = ['Ostrożny','Realistyczny','Optymistyczny'];
+  const scenC = ['sc-con','sc-real','sc-opt'];
+  const scenarios = scenM.map((m,i) => {
+    const b = monthlyBenefit * m, n = b - monthlyCost;
+    return { name:scenN[i], cls:scenC[i], benefit:b, net:n, payback: n>0 ? initial/n : Infinity };
+  });
+
+  // ── VERDICT (uses utilization!) ──
+  const demandLow = demand === 'low';
+  const ru = reqUtil !== null ? reqUtil : 0;
+  let verdict, vClass, vDesc;
+  // Build reasons array
+  let reasons = [];
+
+  if (monthlyNet <= 0 || payback > 30 || (hasUtilData && ru > 90) || hasUtilMismatch) {
+    verdict = 'NIE KUPUJ';
+    vClass = 'verdict-no';
+    if (hasUtilMismatch) {
+      vDesc = 'Sprzęt musi pracować więcej niż realnie zakładasz. Przy Twoim obłożeniu nie osiągnie progu rentowności.';
+      reasons.push({label:'Wymagane obłożenie', value:fmt1(reqUtil)+'%', cls:'wr-bad'});
+      reasons.push({label:'Twoje realne obłożenie', value:util+'%', cls:'wr-bad'});
+    } else if (monthlyNet <= 0) {
+      vDesc = 'Inwestycja nie zarabia — koszty zjadają cały efekt. Szukaj tańszej opcji albo więcej przychodów.';
+    } else if (hasUtilData && ru > 100) {
+      vDesc = 'Wymagane obłożenie przekracza 100% — w praktyce to fizycznie niemożliwe. Sprzęt nie zarobi na siebie nawet pracując non-stop.';
+    } else if (payback > 30) {
+      vDesc = 'Zwrot powyżej 30 miesięcy to za dużo. Za długo czekasz, zanim inwestycja zacznie pracować na Ciebie.';
+    } else {
+      vDesc = 'Sprzęt musi pracować niemal non-stop, żeby się opłacał. To nierealne.';
+    }
+  } else if (demandLow && payback > 18) {
+    verdict = 'NIE KUPUJ';
+    vClass = 'verdict-no';
+    vDesc = 'Nie masz klientów, a zwrot trwa ponad 18 miesięcy. Kupowanie sprzętu „na nadzieję" przy tak długim zwrocie to klasyczna pułapka. Najpierw zdobądź zlecenia.';
+  } else if (demandLow || (hasUtilData && ru > 70) || payback > 18) {
+    verdict = 'DO ROZWAŻENIA';
+    vClass = 'verdict-maybe';
+    vDesc = 'Może się opłacać, ale nie ma dużego zapasu. Popatrz na scenariusz ostrożny — jeśli tam też wychodzi, kupuj.';
+  } else {
+    verdict = 'TAK, KUP';
+    vClass = 'verdict-buy';
+    vDesc = 'Wygląda dobrze. Szybki zwrot, rozsądne obłożenie, i masz klientów. Można brać.';
+  }
+
+  if (confidence < 50) vDesc += ' ⚠️ Pominąłeś dużo pytań — ta ocena jest mało pewna.';
+
+  // Build reason bullets
+  reasons.push({
+    label:'Zwrot inwestycji',
+    value: isFinite(payback) ? fmt(Math.ceil(payback))+' mies.' : 'brak',
+    cls: payback<=18 ? 'wr-good' : payback<=30 ? 'wr-mid' : 'wr-bad'
+  });
+  if (hasUtilData && !hasUtilMismatch) {
+    reasons.push({
+      label:'Wymagane obłożenie',
+      value: fmt1(reqUtil)+'%',
+      cls: reqUtil<=50 ? 'wr-good' : reqUtil<=70 ? 'wr-mid' : 'wr-bad'
+    });
+  }
+  reasons.push({
+    label:'Wynik netto / mies.',
+    value: (monthlyNet>0?'+':'')+fmt(monthlyNet)+' zł',
+    cls: monthlyNet>0 ? 'wr-good' : 'wr-bad'
+  });
+  const demandLabel = demand==='high'?'wysoki':demand==='medium'?'średni':'niski';
+  reasons.push({
+    label:'Popyt',
+    value: demandLabel,
+    cls: demand==='high'?'wr-good':demand==='medium'?'wr-mid':'wr-bad'
+  });
+
+  // ═══ BUILD HTML ═══
+  let h = '';
+  let delay = 0;
+  const d = () => { delay += 0.06; return `animation-delay:${delay.toFixed(2)}s`; };
+
+  // Verdict
+  h += `<div class="verdict-box ${vClass} fade-in" style="${d()}">
+    <div class="verdict-label">Werdykt</div>
+    <div class="verdict-text">${verdict}</div>
+    <div class="verdict-desc">${vDesc}</div>
+  </div>`;
+
+  // Why this verdict
+  h += `<div class="why-box fade-in" style="${d()}">
+    <div class="why-title">Dlaczego taki werdykt?</div>
+    ${reasons.map(r => `<div class="why-row"><span class="wr-label">${r.label}</span><span class="wr-value ${r.cls}">${r.value}</span></div>`).join('')}
+  </div>`;
+
+  // Dual meters: confidence + risk
+  const confColor = confidence>=70?'var(--green)':confidence>=40?'var(--orange)':'var(--red)';
+  const confWord = confidence>=70?'Wysoka':confidence>=40?'Średnia':'Niska';
+  h += `<div class="meters-grid fade-in" style="${d()}">
+    <div class="meter-card">
+      <div class="meter-label">
+        <span style="color:var(--text-mid)">Jakość danych</span>
+        <strong style="font-family:'Space Mono',monospace;font-size:.78rem;color:${confColor}">${confidence}%</strong>
+      </div>
+      <div class="meter-bar"><div class="meter-fill" style="width:${confidence}%;background:${confColor}"></div></div>
+      <div class="meter-hint">${confWord} — ${skippedCount>0?'pominięto '+skippedCount+' pytań':'odpowiedziano na wszystko'}</div>
+    </div>
+    <div class="meter-card">
+      <div class="meter-label">
+        <span style="color:var(--text-mid)">Ryzyko biznesowe</span>
+        <strong style="font-family:'Space Mono',monospace;font-size:.78rem;color:${riskColor}">${riskWord}</strong>
+      </div>
+      <div class="meter-bar"><div class="meter-fill" style="width:${riskPct}%;background:${riskColor}"></div></div>
+      <div class="meter-hint">${riskPct<=25?'Bezpieczna inwestycja':riskPct<=50?'Umiarkowane ryzyko':riskPct<=75?'Potrzebna ostrożność':'Duże ryzyko straty'}</div>
+    </div>
+  </div>`;
+
+  // KPI
+  h += `<div class="kpi-grid fade-in" style="${d()}">
+    <div class="kpi-card">
+      <div class="kpi-label">Koszt całkowity</div>
+      <div class="kpi-value kpi-neut">${fmt(totalCost)} zł</div>
+      <div class="kpi-sub">przez ${period} mies.</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Koszt miesięczny</div>
+      <div class="kpi-value kpi-neut">${fmt(monthlyCost)} zł</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Zarobek / oszczędność</div>
+      <div class="kpi-value ${monthlyBenefit>0?'kpi-pos':'kpi-neut'}">${fmt(monthlyBenefit)} zł/mies.</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Na czysto</div>
+      <div class="kpi-value ${monthlyNet>0?'kpi-pos':'kpi-neg'}">${monthlyNet>0?'+':''}${fmt(monthlyNet)} zł/mies.</div>
+      <div class="kpi-sub">${monthlyNet>0?'zarabiasz':'dokładasz'}</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Zwrot za</div>
+      <div class="kpi-value ${payback<=18?'kpi-pos':payback<=30?'kpi-neut':'kpi-neg'}">${isFinite(payback)?fmt(Math.ceil(payback))+' mies.':'nigdy'}</div>
+      <div class="kpi-sub">${payback<=12?'super':payback<=24?'ok':payback<=30?'ryzykownie':'za długo'}</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Żeby wyjść na zero</div>
+      <div class="kpi-value kpi-neut">${fmt(monthlyCost)} zł</div>
+      <div class="kpi-sub">min. przychód / mies.</div>
+    </div>
+  </div>`;
+
+  // Breakeven + buffer
+  if (revPerHour > 0 && reqHours !== null) {
+    h += `<div class="be-box fade-in" style="${d()}">
+      <h3>Ile ten sprzęt musi pracować, żeby się opłacał?</h3>
+      <div class="be-row"><span class="lbl">Minimum godzin miesięcznie</span><span class="val">${fmt1(reqHours)} h</span></div>
+      <div class="be-row"><span class="lbl">Wymagane obłożenie</span><span class="val">${fmt1(reqUtil)}%${reqUtil > 100 ? ' ⛔' : ''}</span></div>
+      <div class="be-row"><span class="lbl">Twoje realne obłożenie</span><span class="val">${util}%</span></div>`;
+
+    // Warning if reqUtil > 100%
+    if (reqUtil > 100) {
+      h += `<div class="buffer-box" style="background:var(--red-bg);color:var(--red)">
+        <span class="buffer-icon">⛔</span>
+        <div class="buffer-text">Wymagane obłożenie wynosi <strong>${fmt1(reqUtil)}%</strong> — to przekracza 100%. Nawet gdyby sprzęt pracował non-stop, nie zarobi na siebie. Inwestycja nie ma sensu przy tych danych.</div>
+      </div>`;
+    }
+
+    // Buffer (only when reqUtil is realistic)
+    if (bufferPP !== null && reqUtil <= 100) {
+      const bp = Math.round(bufferPP);
+      let bufCol, bufBg, bufIcon, bufText;
+      if (bp >= 20) {
+        bufCol = 'var(--green)'; bufBg = 'var(--green-bg)'; bufIcon = '🛡️';
+        bufText = `Masz <strong>${bp} pp</strong> zapasu. Nawet jeśli pójdzie gorzej, sprzęt wciąż zarobi na siebie.`;
+      } else if (bp >= 10) {
+        bufCol = 'var(--orange)'; bufBg = 'var(--orange-bg)'; bufIcon = '⚠️';
+        bufText = `Masz <strong>${bp} pp</strong> zapasu. To niewiele — jedno gorsze zlecenie i jesteś na granicy.`;
+      } else if (bp >= 0) {
+        bufCol = 'var(--orange)'; bufBg = 'var(--orange-bg)'; bufIcon = '⚠️';
+        bufText = `Masz tylko <strong>${bp} pp</strong> zapasu. Praktycznie zero marginesu na błąd.`;
+      } else {
+        bufCol = 'var(--red)'; bufBg = 'var(--red-bg)'; bufIcon = '🚫';
+        bufText = `Brak zapasu — brakuje Ci <strong>${Math.abs(bp)} pp</strong>. Sprzęt musi pracować więcej niż realnie zakładasz.`;
+      }
+      h += `<div class="buffer-box" style="background:${bufBg};color:${bufCol}">
+        <span class="buffer-icon">${bufIcon}</span>
+        <div class="buffer-text">${bufText}</div>
+      </div>`;
+    }
+
+    // Utilization bar with two markers
+    const fillReq = Math.min(reqUtil, 100);
+    const fillUtil = Math.min(util, 100);
+    const barCol = reqUtil <= 50 ? 'var(--green)' : reqUtil <= 70 ? 'var(--orange)' : 'var(--red)';
+
+    h += `<div class="util-wrap">
+      <div class="util-meta">
+        <span style="color:var(--text-light)">Obłożenie: wymagane vs. Twoje</span>
+      </div>
+      <div class="util-bar">
+        <div class="util-fill" style="width:${fillReq}%;background:${barCol};opacity:.35"></div>
+        <div class="util-fill" style="width:${Math.min(fillReq, fillUtil)}%;background:${barCol};position:absolute;top:0;left:0;"></div>
+        <div class="util-mark" style="left:${fillUtil}%;background:var(--accent);width:3px" title="Twoje obłożenie: ${util}%"></div>
+      </div>
+      <div class="util-legend">
+        <span><span class="util-legend-dot" style="background:${barCol}"></span>Wymagane: ${fmt1(reqUtil)}%</span>
+        <span><span class="util-legend-dot" style="background:var(--accent)"></span>Twoje: ${util}%</span>
+      </div>
+    </div>`;
+
+    h += `</div>`;
+  }
+
+  // Scenarios
+  h += `<div class="sc-box fade-in" style="${d()}">
+    <h3>A co jeśli pójdzie gorzej albo lepiej?</h3>
+    <div class="sc-grid">`;
+  scenarios.forEach(s => {
+    h += `<div class="sc-card ${s.cls}">
+      <div class="sc-t">${s.name}</div>
+      <div class="sc-r">Wpływa: <strong>${fmt(s.benefit)} zł</strong></div>
+      <div class="sc-r">Na czysto: <strong>${s.net>0?'+':''}${fmt(s.net)} zł</strong></div>
+      <div class="sc-r">Zwrot: <strong>${isFinite(s.payback)?fmt(Math.ceil(s.payback))+' mies.':'—'}</strong></div>
+    </div>`;
+  });
+  h += `</div></div>`;
+
+  // Skipped note
+  if (skippedCount > 0) {
+    const names = [...skipped].map(id => {
+      const q = [...baseQuestions, earnQ, saveQ].find(q => q.id === id);
+      return q ? q.title : id;
+    });
+    h += `<div class="penalty-note fade-in" style="${d()}">
+      ⚠️ <strong>Pominięte pytania</strong> (użyto domyślnych wartości):<br>${names.join(' · ')}
+    </div>`;
+  }
+
+  // CTA
+  h += `<div class="cta-box fade-in" style="${d()}">
+    <h3>Nie chcesz zgadywać?</h3>
+    <p>Umów 15-minutową konsultację i sprawdź tę inwestycję na realnych danych z Twojej firmy.</p>
+    <a href="https://naprawimyfirme.pl/kontakt" class="cta-link" target="_blank" rel="noopener noreferrer">Umów 15 min konsultację →</a>
+  </div>`;
+
+  // Restart
+  h += `<div class="restart-wrap fade-in" style="${d()}">
+    <button class="btn-restart" onclick="restart()">Sprawdź inną inwestycję ↻</button>
+  </div>`;
+
+  const el = document.getElementById('screenResults');
+  el.innerHTML = h;
+  el.classList.add('active');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function restart() {
+  document.getElementById('screenResults').classList.remove('active');
+  document.getElementById('screenResults').innerHTML = '';
+  document.getElementById('screenIntro').classList.add('active');
+}
+</script>
+
 </body>
 </html>
