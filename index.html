@@ -2,6 +2,7 @@
 <html lang="pl">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Kalkulator kosztu inwestycji</title>
   <style>
     /* Ogólne style strony */
@@ -127,6 +128,16 @@
     </div>
   </section>
 
+<!-- CTA NaprawimyFirme -->
+<div style="max-width:720px;margin:24px auto;padding:24px 28px;background:#1A1A2E;border-radius:12px;font-family:system-ui,-apple-system,sans-serif;box-sizing:border-box;text-align:left;">
+  <p style="margin:0 0 8px;font-size:18px;font-weight:600;color:#ffffff;line-height:1.35;">Policzyłeś koszt inwestycji. Czy cena usługi go uwzględnia?</p>
+  <p style="margin:0 0 16px;font-size:14px;color:#B8B9C8;line-height:1.6;">Audyt procesów biznesowych przekłada koszty sprzętu, ludzi i firmy na rentowność poszczególnych usług.</p>
+  <div style="display:flex;flex-wrap:wrap;gap:10px;">
+    <a href="https://naprawimyfirme.pl/audyt-procesow-biznesowych" target="_top" style="display:inline-block;background:#8e42ff;color:#ffffff;font-weight:600;font-size:14px;padding:12px 20px;border-radius:8px;text-decoration:none;">Zobacz audyt procesów</a>
+    <a href="https://naprawimyfirme.pl/kontakt" target="_top" style="display:inline-block;border:1px solid #6b6b85;color:#ffffff;font-weight:600;font-size:14px;padding:12px 20px;border-radius:8px;text-decoration:none;">Umów bezpłatną konsultację</a>
+  </div>
+</div>
+
   <script>
     function calculateInvestmentCost() {
       const purchaseCost = parseFloat(document.getElementById("purchaseCost").value);
@@ -180,7 +191,16 @@
       `;
       
       document.getElementById("results").innerHTML = resultTable;
+      sendHeightToParent();
     }
+
+    function sendHeightToParent() {
+      if (window.parent !== window) {
+        window.parent.postMessage({ iframeHeight: document.body.scrollHeight }, '*');
+      }
+    }
+    window.addEventListener('load', sendHeightToParent);
+    window.addEventListener('resize', sendHeightToParent);
   </script>
 </body>
 </html>
